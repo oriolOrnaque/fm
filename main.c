@@ -289,10 +289,6 @@ int main()
 
 				if(!cancel_operation)
 				{
-					/*bool is_dir = false;
-					if(buffer[strlen(buffer)-1] == '/')
-						is_dir = true;*/
-
 					bool is_dir = path_is_dir(buffer);
 
 					create_file(buffer, is_dir);
@@ -661,6 +657,9 @@ void get_child_path(void)
 
 bool path_is_dir(const char* path)
 {
+	if(path == NULL)
+		return false;
+
 	if(path[strlen(path)-1] == '/')
 		return true;
 
