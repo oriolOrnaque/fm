@@ -1,4 +1,4 @@
 # fm
 Minimal terminal file manager based on ncurses
 
-![alt text](https://github.com/oriolOrnaque/fm/blob/master/capture1.png?raw=true)
+![main screen](https://raw.githubusercontent.com/oriolOrnaque/fm/master/imgs/capture1.png)
