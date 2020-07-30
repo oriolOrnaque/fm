@@ -1,0 +1,13 @@
+INSTALL INSTRUCTIONS
+=======================
+[*] To compile from the source you will need the ncurses library installed.
+```gcc main.c -lcurses```
+
+[*] Add this script onto your .bashrc
+```echo "source <path to the fm folder>/fm.bashrc" >> ~/.bashrc```
+
+[*] Reload your .bashrc configuration
+
+[*] to execute fm type "fm"
+
+[*] If you want to execute fm with another command change the function name in fm.bashrc and reload your .bashrc configuration

@@ -1,0 +1,5 @@
+TO DO
+=========
+[*] on navigation mode when the user inputs a number the cursor automcatically moves to the file with that index
+
+[*] on command mode fix the backspace key, doesnt delete chars on the buffer
