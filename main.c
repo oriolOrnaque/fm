@@ -88,6 +88,7 @@ enum ACTIONS
 	TOGGLE_HIDDEN,
 	RELOAD_REDRAW,
 	JUMP_TO_FIRST,
+	JUMP_TO_N,
 	JUMP_TO_LAST,
 	NEW_FILE,
 	DELETE_FILE,
@@ -128,6 +129,13 @@ struct screen
 	bool winch_received;
 };
 
+struct index_jumper
+{
+	char* buffer;
+	ssize_t size;
+	size_t capacity;
+};
+
 
 /*
 ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
@@ -146,6 +154,12 @@ void handler_winch(int sig);
 void draw(void);
 void draw_command(const char* prompt, char* buffer);
 enum ACTIONS get_next_action(void);
+
+void index_jumper_new(void);
+void index_jumper_push(const char ch);
+void index_jumper_pop(void);
+void index_jumper_jump(void);
+void index_jumper_free(void);
 
 char* read_command_input(const char* prompt);
 void create_file(const char* name, const bool is_dir);
@@ -167,6 +181,7 @@ char* path_concat(char* base, char* appended);
 
 struct entries entries;
 struct screen screen;
+struct index_jumper index_jumper;
 bool run;
 bool show_hidden;
 bool cd_on_exit;
@@ -191,6 +206,8 @@ int main()
 
 	cd_on_exit = true;
 	show_hidden = false;
+
+	index_jumper_new();
 
 	cwd = getcwd(cwd, PATH_MAX);
 
@@ -306,12 +323,18 @@ int main()
 				entries_fill(cwd);
 				draw();
 				break;
+			case JUMP_TO_N:
+				index_jumper_jump();
+				draw();
+				break;
 			default:
 				break;
 		}
 	}
 
 	endwin();
+
+	index_jumper_free();
 
 	entries_free();
 
@@ -491,7 +514,7 @@ void draw_command(const char* prompt, char* buffer)
 
 enum ACTIONS get_next_action(void)
 {
-	char input_key;
+	int input_key = 0;
 	input_key = getch();
 
 	switch(input_key)
@@ -522,6 +545,21 @@ enum ACTIONS get_next_action(void)
 			return NEW_FILE; break; /* new file or directory */
 		case 'd':
 			return DELETE_FILE; break; /* delete file or directory */
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			index_jumper_push(input_key);
+			return JUMP_TO_N; break;
+		case KEY_BACKSPACE:
+			index_jumper_pop();
+			return JUMP_TO_N; break;
 		/*
 		 *	c - copy
 		 *	m - move
@@ -533,6 +571,49 @@ enum ACTIONS get_next_action(void)
 		default:
 			return ACTION_UNKNOWN; break;
 	}
+}
+
+void index_jumper_new(void)
+{
+	if(index_jumper.buffer != NULL)
+		free(index_jumper.buffer);
+
+	index_jumper.capacity = sizeof(char) * 128;
+
+	index_jumper.buffer = malloc(index_jumper.capacity);
+	memset(index_jumper.buffer, 0x0, index_jumper.capacity);
+
+	index_jumper.size = 0;
+}
+
+void index_jumper_push(const char ch)
+{
+	if(index_jumper.size < index_jumper.capacity)
+		index_jumper.buffer[index_jumper.size++] = ch;
+}
+
+void index_jumper_pop(void)
+{
+	if(index_jumper.size > 0)
+		index_jumper.buffer[--(index_jumper.size)] = 0x0;
+}
+
+void index_jumper_jump(void)
+{
+	ssize_t index = atoi(index_jumper.buffer);
+
+	entries.index = index;
+	entries.display_start_index = MAX(index - 5, 0);
+	entries.display_end_index = MIN(entries.size, screen.rows - 1);
+}
+
+void index_jumper_free(void)
+{
+	if(index_jumper.buffer != NULL)
+		free(index_jumper.buffer);
+
+	index_jumper.size = 0;
+	index_jumper.capacity = 0;
 }
 
 char* read_command_input(const char* prompt)
@@ -554,6 +635,7 @@ char* read_command_input(const char* prompt)
 
 	while(expect_more_input)
 	{
+		input_key = 0;
 		input_key = getch();
 
 		switch(input_key)
@@ -567,8 +649,7 @@ char* read_command_input(const char* prompt)
 				expect_more_input = false;
 				cancel_operation = true;
 				break;
-			case 0x7f: /* fallthrough */
-			case 0x8: /* backspace */
+			case KEY_BACKSPACE:
 				if(index_buffer > 0)
 					buffer[--index_buffer] = 0x0;
 				draw_command(prompt, buffer);
@@ -579,6 +660,7 @@ char* read_command_input(const char* prompt)
 				if(index_buffer < buffer_size)
 					buffer[index_buffer++] = input_key;
 				draw_command(prompt, buffer);
+				break;
 		}
 	}
 
