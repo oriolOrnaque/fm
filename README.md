@@ -1,5 +1,5 @@
 # fm
-Minimal terminal file manager with ncurses.
+Minimalistic terminal file manager with ncurses.
 Based on [nnn](https://github.com/jarun/nnn).
 
 ![main screen](https://raw.githubusercontent.com/oriolOrnaque/fm/master/imgs/capture1.png)
