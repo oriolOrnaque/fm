@@ -12,6 +12,7 @@ Vim-like navigation:
 * **l** right
 * **G** jump to first entry
 * **g** jump to last entry
+* **[digit]+** jump to the specified index
 
 Exit:
 * **q** exit changing your cwd to the last visited directory
