@@ -13,6 +13,7 @@ Vim-like navigation:
 * **G** jump to first entry
 * **g** jump to last entry
 * **[digit]+** jump to the specified index
+* **backspace** remove last digit from the index
 
 Exit:
 * **q** exit changing your cwd to the last visited directory
